@@ -145,11 +145,12 @@ class OracleChallenge(BaseChallenge):
         data = request.form or request.get_json()
         # submission = data["submission"].strip()
         # instance_id = submission
+        submission = data["submission"].strip()
         team_id = get_current_team().id
 
         try:
             r = requests.post(
-                str(challenge.oracle) + "/attempt", json={"team_id": team_id}
+                    str(challenge.oracle) + "/attempt", json={"team_id": team_id, "submission": submission}
             )
         except requests.exceptions.ConnectionError:
             return False, "Challenge oracle is not available. Talk to an admin."
@@ -176,7 +177,7 @@ class OracleChallenge(BaseChallenge):
         :return:
         """
         data = request.form or request.get_json()
-        submission = "No flags for this challenge"
+        submission = data['submission']
         solve = Solves(
             user_id=user.id,
             team_id=team.id if team else None,
@@ -199,7 +200,7 @@ class OracleChallenge(BaseChallenge):
         :return:
         """
         data = request.form or request.get_json()
-        submission = "No flags for this challenge"
+        submission = data['submission']
         wrong = Fails(
             user_id=user.id,
             team_id=team.id if team else None,
