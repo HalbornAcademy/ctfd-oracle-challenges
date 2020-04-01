@@ -16,7 +16,7 @@ from CTFd.models import (
     Hints,
 )
 from CTFd import utils
-from CTFd.utils.user import get_ip, is_admin, get_current_user
+from CTFd.utils.user import get_ip, is_admin, get_current_team, get_current_user
 from CTFd.utils.uploads import upload_file, delete_file
 from CTFd.utils.decorators.visibility import check_challenge_visibility
 from CTFd.utils.decorators import during_ctf_time_only, require_verified_emails
