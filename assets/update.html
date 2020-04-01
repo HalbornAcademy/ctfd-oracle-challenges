@@ -36,7 +36,17 @@
 	</div>
 
 	<div class="form-group">
-		<label for="value">
+		<label>
+			Challenge secret<br>
+			<small class="form-text text-muted">
+				This is the secret used to authenticate to the endpoint and generate the flags for your challenge.
+			</small>
+		</label>
+        <input type="text" class="form-control" name="oracle" value="{{ challenge.challenge_secret }}" required>
+	</div>
+
+	<div class="form-group">
+		<label„>
 			Value<br>
 			<small class="form-text text-muted">
 				This is how many points teams will receive once they solve this challenge.

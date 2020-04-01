@@ -16,7 +16,7 @@ from CTFd.models import (
     Hints,
 )
 from CTFd import utils
-from CTFd.utils.user import get_ip, is_admin, get_current_team
+from CTFd.utils.user import get_ip, is_admin, get_current_user
 from CTFd.utils.uploads import upload_file, delete_file
 from CTFd.utils.decorators.visibility import check_challenge_visibility
 from CTFd.utils.decorators import during_ctf_time_only, require_verified_emails
@@ -26,6 +26,13 @@ import six
 import json
 import requests
 
+def get_current_account_name():
+    team = get_current_team()
+    if team is not None:
+        return team.name
+
+    user = get_current_user()
+    return user.name
 
 class OracleChallenge(BaseChallenge):
     id = "oracle"  # Unique identifier used to register challenges
@@ -146,11 +153,18 @@ class OracleChallenge(BaseChallenge):
         # submission = data["submission"].strip()
         # instance_id = submission
         submission = data["submission"].strip()
-        team_id = get_current_team().id
+        team_id = get_current_user().account_id
+        team_name = get_current_account_name()
+        challenge_secret = challenge.challenge_secret
 
         try:
             r = requests.post(
-                    str(challenge.oracle) + "/attempt", json={"team_id": team_id, "submission": submission}
+                str(challenge.oracle) + "/attempt", json={
+                    "team_id": team_id,
+                    "team_name": team_name,
+                    "challenge_secret": challenge_secret,
+                    "submission": submission,
+                }
             )
         except requests.exceptions.ConnectionError:
             return False, "Challenge oracle is not available. Talk to an admin."
@@ -230,10 +244,12 @@ class OracleChallenges(Challenges):
     __mapper_args__ = {"polymorphic_identity": "oracle"}
     id = db.Column(None, db.ForeignKey("challenges.id"), primary_key=True)
     oracle = db.Column(db.String(255), default="")
+    challenge_secret = db.Column(db.String(255, default=""))
 
     def __init__(self, *args, **kwargs):
         super(OracleChallenges, self).__init__(**kwargs)
         self.oracle = kwargs["oracle"]
+        self.challenge_secret = kwargs['challenge_secret']
 
 
 def load(app):
@@ -260,13 +276,19 @@ def load(app):
 
         data = request.form or request.get_json()
 
-        team_id = get_current_team().id
+        team_id = get_current_user().account_id
+        team_name = get_current_account_name()
+        challenge_secret = challenge.challenge_secret
         force_new = data["force_new"]
 
         try:
             r = requests.post(
                 str(challenge.oracle) + "/create",
-                json={"team_id": team_id, "force_new": force_new},
+                json={
+                    "team_id": team_id,
+                    "team_name": team_name,
+                    "challenge_secret": challenge_secret,
+                    "force_new": force_new},
             )
         except requests.exceptions.ConnectionError:
             return "ERROR: Challenge oracle is not available. Talk to an admin."
