@@ -1,21 +1,15 @@
-CTFd._internal.challenge.data = undefined;
+CTFd._internal.challenge.data = undefined
 
-CTFd._internal.challenge.renderer = new markdownit({
-    html: true,
-});
+CTFd._internal.challenge.renderer = CTFd.lib.markdown();
 
-CTFd._internal.challenge.preRender = function () {
-
-};
+CTFd._internal.challenge.preRender = function () { }
 
 CTFd._internal.challenge.render = function (markdown) {
-    return CTFd._internal.challenge.renderer.render(markdown);
-};
+    return CTFd._internal.challenge.renderer.render(markdown)
+}
 
 
-CTFd._internal.challenge.postRender = function () {
-
-};
+CTFd._internal.challenge.postRender = function () { }
 
 
 CTFd._internal.challenge.submit = function (preview) {
@@ -24,9 +18,8 @@ CTFd._internal.challenge.submit = function (preview) {
 
     var body = {
         'challenge_id': challenge_id,
-        'submission': submission
-    };
-
+        'submission': submission,
+    }
     var params = {}
     if (preview) {
         params['preview'] = true
