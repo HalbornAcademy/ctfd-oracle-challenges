@@ -169,10 +169,14 @@ class OracleChallenge(BaseChallenge):
         except requests.exceptions.ConnectionError:
             return False, "Challenge oracle is not available. Talk to an admin."
 
-        if r.status_code == 200:
-            return True, "Correct"
+        if r.status_code != 200:
+            return False, "An error occurred when attempting to submit your flag. Talk to an admin."
 
-        return False, "Incorrect"
+        resp = r.json()
+        if resp['correct']:
+            return True, resp['message']
+        else:
+            return False, resp["message"]
 
         # flags = Flags.query.filter_by(challenge_id=challenge.id).all()
         # for flag in flags:
