@@ -52,7 +52,7 @@ def check_solve():
     except KeyError:
         abort(401)
 
-    return "Success"
+    return {'correct': False, 'message': 'Invalid state'}
 
 
 app.run(debug=True, threaded=True, host="127.0.0.1", port=4001)
