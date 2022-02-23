@@ -76,6 +76,9 @@ def do_fund():
 
     wallet = str(data["wallet"])
 
+    if wallet == '' or wallet is None:
+        return "No wallet provided"
+
     try:
         accounts[0].transfer(wallet, web3.toWei(1, 'ether'))
         return "Send 1 ETHER"
