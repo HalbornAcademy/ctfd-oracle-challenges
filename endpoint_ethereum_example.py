@@ -85,5 +85,6 @@ def do_fund():
     except Exception as e:
         return str(e)
 
-accounts.from_mnemonic(os.getenv('MNEMONIC'))
-app.run(debug=True, threaded=True, host="127.0.0.1", port=4001)
+def main():
+    accounts.from_mnemonic(os.getenv('MNEMONIC'))
+    app.run(debug=True, threaded=True, host="127.0.0.1", port=4001)
