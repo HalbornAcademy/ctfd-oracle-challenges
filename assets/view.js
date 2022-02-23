@@ -91,6 +91,15 @@ fundWallet = function() {
     }).then(function (response) {
         return response.text();
     }).then(function (response) {
-        CTFd.lib.$("#result-notification").html(response);
-    });
+        const result_message = $("#result-message");
+        const result_notification = $("#result-notification");
+	result_message.text(response);
+        result_notification.removeClass();
+        result_notification.addClass("alert alert-secondary alert-dismissable text-center");
+        result_notification.slideDown();
+        $("#fundwallet-key").prop("disabled", true);
+        setTimeout(function() {
+            $(".alert").slideUp();
+          }, 3000);
+    })
 };
