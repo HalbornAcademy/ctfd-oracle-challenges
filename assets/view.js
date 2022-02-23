@@ -14,11 +14,11 @@ CTFd._internal.challenge.postRender = function () { }
 
 CTFd._internal.challenge.submit = function (preview) {
     var challenge_id = parseInt(CTFd.lib.$('#challenge-id').val())
-    var submission = CTFd.lib.$('#submission-input').val()
+    var wallet_address = CTFd.lib.$('#wallet-address').val()
 
     var body = {
         'challenge_id': challenge_id,
-        'submission': submission,
+        'wallet_address': wallet_address,
     }
     var params = {}
     if (preview) {
