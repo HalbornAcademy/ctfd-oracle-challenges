@@ -76,9 +76,6 @@
                 <button onclick="newChallenge()" type="submit" id="delchallenge-key" tabindex="5"
                                                                                      class="btn btn-block btn-secondary">New Instance
                 </button>
-                <button onclick="fundWallet()" type="submit" id="fundwallet-key" tabindex="5"
-                                                                                     class="btn btn-block btn-md btn-outline-secondary float-right">Fund Wallet
-                </button>
               </div>
             </div>
             <script>getChallenge();</script>
@@ -87,6 +84,9 @@
             <div class="row submit-row">
               <div class="col-md-12 form-group">
                 <input class="form-control" type="text" name="address" id="wallet-address" placeholder="YOUR WALLET ADDRESS"/>
+                <button onclick="fundWallet()" type="submit" id="fundwallet-key" tabindex="5"
+                                                                                     class="btn btn-block btn-md btn-outline-secondary float-right">Fund Wallet
+                </button>
                 <input id="challenge-id" type="hidden" value="{{ challenge.id }}">
               </div>
               <div class="col-md-12 form-group key-submit">
