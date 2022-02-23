@@ -14,11 +14,9 @@ CTFd._internal.challenge.postRender = function () { }
 
 CTFd._internal.challenge.submit = function (preview) {
     var challenge_id = parseInt(CTFd.lib.$('#challenge-id').val())
-    var wallet_address = CTFd.lib.$('#wallet-address').val()
 
     var body = {
-        'challenge_id': challenge_id,
-        'wallet_address': wallet_address,
+        'challenge_id': challenge_id
     }
     var params = {}
     if (preview) {
@@ -76,3 +74,23 @@ newChallenge = function() {
     });
 };
 
+
+fundWallet = function() {
+    var challenge_id = parseInt(CTFd.lib.$('#challenge-id').val());
+    var wallet_address = CTFd.lib.$('#wallet-address').val()
+    var url = "/plugins/oracle_challenges/" + challenge_id + "/fund";
+
+    var params = {
+        'wallet': wallet_address
+    };
+
+    CTFd.fetch(url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: JSON.stringify(params)
+    }).then(function (response) {
+        return response.text();
+    }).then(function (response) {
+        CTFd.lib.$("#result-notification").html(response);
+    });
+};

@@ -301,3 +301,40 @@ def load(app):
             return "ERROR: Challenge oracle is not available. Talk to an admin."
 
         return r.text
+
+    @check_challenge_visibility
+    @during_ctf_time_only
+    @require_verified_emails
+    @app.route("/plugins/oracle_challenges/<challenge_id>/fund", methods=["POST"])
+    def request_new_challenge(challenge_id):
+        if is_admin():
+            challenge = OracleChallenges.query.filter(
+                Challenges.id == challenge_id
+            ).first_or_404()
+        else:
+            challenge = OracleChallenges.query.filter(
+                OracleChallenges.id == challenge_id,
+                and_(Challenges.state != "hidden", Challenges.state != "locked"),
+            ).first_or_404()
+
+        data = request.form or request.get_json()
+
+        team_id = get_current_user().account_id
+        team_name = get_current_account_name()
+        wallet = data["wallet"]
+
+        try:
+            r = requests.post(
+                str(challenge.oracle) + "/fund",
+                json={
+                    "team_id": team_id,
+                    "team_name": team_name,
+                    "wallet": wallet},
+            )
+        except requests.exceptions.ConnectionError:
+            return "ERROR: Challenge oracle is not available. Talk to an admin."
+
+        if r.status_code != 200:
+            return "ERROR: Challenge oracle is not available. Talk to an admin."
+
+        return r.text
