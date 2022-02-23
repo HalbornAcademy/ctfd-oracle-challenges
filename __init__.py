@@ -306,7 +306,7 @@ def load(app):
     @during_ctf_time_only
     @require_verified_emails
     @app.route("/plugins/oracle_challenges/<challenge_id>/fund", methods=["POST"])
-    def request_new_challenge(challenge_id):
+    def request_new_challenge_fund(challenge_id):
         if is_admin():
             challenge = OracleChallenges.query.filter(
                 Challenges.id == challenge_id
