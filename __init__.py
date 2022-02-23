@@ -152,7 +152,7 @@ class OracleChallenge(BaseChallenge):
         data = request.form or request.get_json()
         # submission = data["submission"].strip()
         # instance_id = submission
-        submission = data["submission"].strip()
+        # submission = data["submission"].strip()
         team_id = get_current_user().account_id
         team_name = get_current_account_name()
         challenge_secret = challenge.challenge_secret
@@ -163,7 +163,7 @@ class OracleChallenge(BaseChallenge):
                     "team_id": team_id,
                     "team_name": team_name,
                     "challenge_secret": challenge_secret,
-                    "submission": submission,
+                    # "submission": submission,
                 }
             )
         except requests.exceptions.ConnectionError:
@@ -195,7 +195,8 @@ class OracleChallenge(BaseChallenge):
         :return:
         """
         data = request.form or request.get_json()
-        submission = data['submission']
+        # submission = data['submission']
+        submission = "No flags for this challenge"
         solve = Solves(
             user_id=user.id,
             team_id=team.id if team else None,
@@ -205,7 +206,6 @@ class OracleChallenge(BaseChallenge):
         )
         db.session.add(solve)
         db.session.commit()
-        db.session.close()
 
     @staticmethod
     def fail(user, team, challenge, request):
@@ -218,7 +218,8 @@ class OracleChallenge(BaseChallenge):
         :return:
         """
         data = request.form or request.get_json()
-        submission = data['submission']
+        # submission = data['submission']
+        submission = "No flags for this challenge"
         wrong = Fails(
             user_id=user.id,
             team_id=team.id if team else None,
@@ -228,7 +229,6 @@ class OracleChallenge(BaseChallenge):
         )
         db.session.add(wrong)
         db.session.commit()
-        db.session.close()
 
 
 def get_chal_class(class_id):
