@@ -321,6 +321,7 @@ def load(app):
 
         team_id = get_current_user().account_id
         team_name = get_current_account_name()
+        challenge_secret = challenge.challenge_secret
         wallet = data["wallet"]
 
         try:
@@ -329,6 +330,7 @@ def load(app):
                 json={
                     "team_id": team_id,
                     "team_name": team_name,
+                    "challenge_secret": challenge_secret,
                     "wallet": wallet},
             )
         except requests.exceptions.ConnectionError:
