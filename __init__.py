@@ -155,14 +155,14 @@ class OracleChallenge(BaseChallenge):
         # submission = data["submission"].strip()
         team_id = get_current_user().account_id
         team_name = get_current_account_name()
-        challenge_secret = challenge.challenge_secret
+        challenge_id = challenge.challenge_id
 
         try:
             r = requests.post(
                 str(challenge.oracle) + "/attempt", json={
                     "team_id": team_id,
                     "team_name": team_name,
-                    "challenge_secret": challenge_secret,
+                    "challenge_id": challenge_id,
                     # "submission": submission,
                 }
             )
@@ -248,12 +248,12 @@ class OracleChallenges(Challenges):
     __mapper_args__ = {"polymorphic_identity": "oracle"}
     id = db.Column(None, db.ForeignKey("challenges.id"), primary_key=True)
     oracle = db.Column(db.String(255), default="")
-    challenge_secret = db.Column(db.String(255), default="")
+    challenge_id = db.Column(db.String(255), default="")
 
     def __init__(self, *args, **kwargs):
         super(OracleChallenges, self).__init__(**kwargs)
         self.oracle = kwargs["oracle"]
-        self.challenge_secret = kwargs['challenge_secret']
+        self.challenge_id = kwargs['challenge_id']
 
 
 def load(app):
@@ -282,7 +282,7 @@ def load(app):
 
         team_id = get_current_user().account_id
         team_name = get_current_account_name()
-        challenge_secret = challenge.challenge_secret
+        challenge_id = challenge.challenge_id
         force_new = data["force_new"]
 
         try:
@@ -291,47 +291,8 @@ def load(app):
                 json={
                     "team_id": team_id,
                     "team_name": team_name,
-                    "challenge_secret": challenge_secret,
+                    "challenge_id": challenge_id,
                     "force_new": force_new},
-            )
-        except requests.exceptions.ConnectionError:
-            return "ERROR: Challenge oracle is not available. Talk to an admin."
-
-        if r.status_code != 200:
-            return "ERROR: Challenge oracle is not available. Talk to an admin."
-
-        return r.text
-
-    @check_challenge_visibility
-    @during_ctf_time_only
-    @require_verified_emails
-    @app.route("/plugins/oracle_challenges/<challenge_id>/fund", methods=["POST"])
-    def request_new_challenge_fund(challenge_id):
-        if is_admin():
-            challenge = OracleChallenges.query.filter(
-                Challenges.id == challenge_id
-            ).first_or_404()
-        else:
-            challenge = OracleChallenges.query.filter(
-                OracleChallenges.id == challenge_id,
-                and_(Challenges.state != "hidden", Challenges.state != "locked"),
-            ).first_or_404()
-
-        data = request.form or request.get_json()
-
-        team_id = get_current_user().account_id
-        team_name = get_current_account_name()
-        challenge_secret = challenge.challenge_secret
-        wallet = data["wallet"]
-
-        try:
-            r = requests.post(
-                str(challenge.oracle) + "/fund",
-                json={
-                    "team_id": team_id,
-                    "team_name": team_name,
-                    "challenge_secret": challenge_secret,
-                    "wallet": wallet},
             )
         except requests.exceptions.ConnectionError:
             return "ERROR: Challenge oracle is not available. Talk to an admin."

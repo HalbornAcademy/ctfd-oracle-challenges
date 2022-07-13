@@ -62,17 +62,17 @@
 				This is is the endpoint that is queried when a challenge is created or a solve is attempted.
 			</small>
 		</label>
-		<input type="url" class="form-control" name="oracle" placeholder="http://127.0.0.1:4001" required>
+		<input type="url" class="form-control" name="oracle" placeholder="http://eth-oracle:4001" required>
 	</div>
 
 	<div class="form-group">
 		<label>
-			Challenge Secret<br>
+			Challenge Id<br>
 			<small class="form-text text-muted">
-				This is the secret used to authenticate to the endpoint and generate the flags for your challenge.
+				This is the Id of the challenge
 			</small>
 		</label>
-		<input type="text" class="form-control" name="challenge_secret" placeholder="<your_flag_token_here>" required>
+		<input type="text" class="form-control" name="challenge_id" placeholder="<challenge0>" required>
 	</div>
 
 	<input type="hidden" name="state" value="hidden">
