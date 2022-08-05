@@ -29,29 +29,28 @@
             </div>
             <span class="challenge-desc">{% block description %}{{ challenge.html }}{% endblock %}</span>
             <div class="challenge-hints hint-row row">
-              {% for hint in hints %}
-              <div class='col-md-12 hint-button-wrapper text-center mb-3'>
-                <a class="btn btn-info btn-hint btn-block" href="javascript:;"
-                                                           onclick="javascript:loadhint({{ hint.id }})">
-                  {% if hint.content %}
-                  <small>
-                    View Hint
-                  </small>
-                  {% else %}
-                  {% if hint.cost %}
-                  <small>
-                    Unlock Hint for {{ hint.cost }} points
-                  </small>
-                  {% else %}
-                  <small>
-                    View Hint
-                  </small>
-                  {% endif %}
-                  {% endif %}
-                </a>
-              </div>
-              {% endfor %}
-            </div>
+							{% for hint in hints %}
+								<div class='col-md-12 hint-button-wrapper text-center mb-3'>
+									<a class="btn btn-info btn-hint btn-block load-hint" href="javascript:;" data-hint-id="{{ hint.id }}">
+										{% if hint.content %}
+											<small>
+												View Hint
+											</small>
+										{% else %}
+											{% if hint.cost %}
+												<small>
+													Unlock Hint for {{ hint.cost }} points
+												</small>
+											{% else %}
+												<small>
+													View Hint
+												</small>
+											{% endif %}
+										{% endif %}
+									</a>
+								</div>
+							{% endfor %}
+						</div>
             <div class="row challenge-files text-center pb-3">
               {% for file in files %}
 								<div class='col-md-4 col-sm-4 col-xs-12 file-button-wrapper d-block'>
