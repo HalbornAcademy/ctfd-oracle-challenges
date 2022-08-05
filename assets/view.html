@@ -54,16 +54,23 @@
             </div>
             <div class="row challenge-files text-center pb-3">
               {% for file in files %}
-              <div class='col-md-4 col-sm-4 col-xs-12 file-button-wrapper d-block'>
-                <a class='btn btn-info btn-file mb-1 d-inline-block px-2 w-100 text-truncate'
-                   href='{{ script_root }}/files/{{ file }}'>
-                  <i class="fas fa-download"></i>
-                  <small>
-                    {{ file.split('/')[1] }}
-                  </small>
-                </a>
-              </div>
-              {% endfor %}
+								<div class='col-md-4 col-sm-4 col-xs-12 file-button-wrapper d-block'>
+									<a class='btn btn-info btn-file mb-1 d-inline-block px-2 w-100 text-truncate'
+									   href='{{ file }}'>
+										<i class="fas fa-download"></i>
+										<small>
+											{% set segments = file.split('/') %}
+											{% set file = segments | last %}
+											{% set token = file.split('?') | last %}
+											{% if token %}
+												{{ file | replace("?" + token, "") }}
+											{% else %}
+												{{ file }}
+											{% endif %}
+										</small>
+									</a>
+								</div>
+							{% endfor %}
             </div>
 
             <div class="row">
