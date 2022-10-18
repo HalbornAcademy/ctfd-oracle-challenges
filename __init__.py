@@ -165,7 +165,7 @@ class OracleChallenge(BaseChallenge):
                 uuid = CHALLENGE_TEAM_STATES[challenge_id][team_id]['uuid']
 
                 r = requests.post(
-                    str(challenge_id) + "/{}/solved".format(uuid), json={}
+                    'http://' + str(challenge_id) + "/{}/solved".format(uuid), json={}
                 )
             except requests.exceptions.ConnectionError:
                 return False, "Challenge oracle is not available. Talk to an admin."
@@ -283,21 +283,6 @@ def format_details(request, challenge_id, data):
     # return data
 
 CHALLENGE_TEAM_STATES = {}
-# CHALLENGE_ORACLE_CACHE = {}
-
-# def store_oracle_cache(challenge_id, oracle):
-#     print('STORING', challenge_id, oracle)
-#     global CHALLENGE_ORACLE_CACHE
-#     CHALLENGE_ORACLE_CACHE[challenge_id] = oracle
-
-# def invalidate_oracle_cache(challenge_id):
-#     global CHALLENGE_ORACLE_CACHE
-#     del CHALLENGE_ORACLE_CACHE[challenge_id]
-
-# def get_oracle_cache(challenge_id):
-#     global CHALLENGE_ORACLE_CACHE
-#     return CHALLENGE_ORACLE_CACHE.get(challenge_id, None)
-
 
 def load(app):
     app.db.create_all()
@@ -330,14 +315,13 @@ def load(app):
 
         if challenge_id not in CHALLENGE_TEAM_STATES:
             CHALLENGE_TEAM_STATES[challenge_id] = {}
-            # store_oracle_cache(challenge_id, challenge.oracle)
 
         if data.get('force_new', False):
             if team_id in CHALLENGE_TEAM_STATES[challenge_id]:
                 uuid = CHALLENGE_TEAM_STATES[challenge_id][team_id]['uuid']
                 try:
                     r = requests.post(
-                        str(challenge.oracle) + "/{}/kill".format(uuid),
+                        'http://' + str(challenge_id) + "/{}/kill".format(uuid),
                         json={},
                     )
                 except requests.exceptions.ConnectionError:
@@ -351,7 +335,7 @@ def load(app):
 
         try:
             r = requests.post(
-                str(challenge.oracle) + "/new",
+                'http://' + str(challenge_id) + "/new",
                 json={
                     "domain": get_domain_from_url(request.base_url),
                     # "team_name": team_name,
@@ -360,7 +344,6 @@ def load(app):
             )
             CHALLENGE_TEAM_STATES[challenge_id][team_id] = r.json()
         except requests.exceptions.ConnectionError:
-            # invalidate_oracle_cache(challenge_id)
             return "ERROR: Challenge oracle is not available. Talk to an admin."
 
         if r.status_code != 200:
@@ -370,7 +353,6 @@ def load(app):
             return r.json()
         else:
             return format_details(request, challenge_id, r.json())
-        # return r.json().get('description', request.base_url)
 
     @bypass_csrf_protection
     @app.route("/challenge/<challenge_id>/<uuid>", methods=["POST"])
@@ -393,7 +375,7 @@ def load(app):
 
         try:
             resp = requests.post(
-                str(challenge_id) + "/{}".format(uuid),
+                'http://' + str(challenge_id) + "/{}".format(uuid),
                 json=data
             )
         except requests.exceptions.ConnectionError:
