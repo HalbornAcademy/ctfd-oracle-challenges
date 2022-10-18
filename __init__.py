@@ -1,4 +1,4 @@
-from CTFd.plugins import register_plugin_assets_directory
+from CTFd.plugins import register_plugin_assets_directory, bypass_csrf_protection
 from CTFd.plugins.flags import get_flag_class
 from CTFd.plugins.challenges import (
     CTFdStandardChallenge,
@@ -19,8 +19,10 @@ from CTFd import utils
 from CTFd.utils.user import get_ip, is_admin, get_current_team, get_current_user
 from CTFd.utils.uploads import upload_file, delete_file
 from CTFd.utils.decorators.visibility import check_challenge_visibility
-from CTFd.utils.decorators import during_ctf_time_only, require_verified_emails
-from flask import Blueprint, abort, request
+from CTFd.utils.decorators import during_ctf_time_only, require_verified_emails, authed_only
+from flask import Blueprint, abort, request, Response
+from urllib.parse import urlparse
+
 from sqlalchemy.sql import and_
 import six
 import json
@@ -140,6 +142,7 @@ class OracleChallenge(BaseChallenge):
 
     @staticmethod
     def attempt(challenge, request):
+        global CHALLENGE_TEAM_STATES
         """
         This method is used to check whether a given input is right or wrong. It does not make any changes and should
         return a boolean for correctness and a string to be shown to the user. It is also in charge of parsing the
@@ -157,32 +160,24 @@ class OracleChallenge(BaseChallenge):
         team_name = get_current_account_name()
         challenge_id = challenge.challenge_id
 
-        try:
-            r = requests.post(
-                str(challenge.oracle) + "/attempt", json={
-                    "team_id": team_id,
-                    "team_name": team_name,
-                    "challenge_id": challenge_id,
-                    # "submission": submission,
-                }
-            )
-        except requests.exceptions.ConnectionError:
-            return False, "Challenge oracle is not available. Talk to an admin."
+        if challenge_id in CHALLENGE_TEAM_STATES and team_id in CHALLENGE_TEAM_STATES[challenge_id]:
+            try:
+                uuid = CHALLENGE_TEAM_STATES[challenge_id][team_id]['uuid']
 
-        if r.status_code != 200:
-            return False, "An error occurred when attempting to submit your flag. Talk to an admin."
+                r = requests.post(
+                    str(challenge.oracle) + "/{}/solved".format(uuid), json={}
+                )
+            except requests.exceptions.ConnectionError:
+                return False, "Challenge oracle is not available. Talk to an admin."
 
-        resp = r.json()
-        if resp['correct']:
-            return True, resp['message']
+            if r.status_code != 200:
+                return False, "An error occurred when attempting to submit your flag. Talk to an admin."
+
+            resp = r.json()
+            return resp['result'], resp.get('message', 'Solved!' if resp['result'] else 'Not solved')
+
         else:
-            return False, resp["message"]
-
-        # flags = Flags.query.filter_by(challenge_id=challenge.id).all()
-        # for flag in flags:
-        #    if get_flag_class(flag.type).compare(flag, submission):
-        #        return True, 'Correct'
-        # return False, 'Incorrect'
+            return {"error":{"code":-32602,"message":"request new challenge"},"id":-1,"jsonrpc":"2.0"}
 
     @staticmethod
     def solve(user, team, challenge, request):
@@ -244,6 +239,11 @@ def get_chal_class(class_id):
     return cls
 
 
+def get_domain_from_url(url):
+    parsed_uri = urlparse(url)
+    return '{uri.scheme}://{uri.netloc}'.format(uri=parsed_uri)
+
+
 class OracleChallenges(Challenges):
     __mapper_args__ = {"polymorphic_identity": "oracle"}
     id = db.Column(None, db.ForeignKey("challenges.id"), primary_key=True)
@@ -254,6 +254,49 @@ class OracleChallenges(Challenges):
         super(OracleChallenges, self).__init__(**kwargs)
         self.oracle = kwargs["oracle"]
         self.challenge_id = kwargs['challenge_id']
+
+
+def format_details(request, challenge_id, data):
+    rpc = "{}/challenge/{}/{}".format(
+        get_domain_from_url(request.base_url),
+        challenge_id,
+        data['uuid']
+    )
+
+    details = json.dumps(data['details'])
+    return '''
+<b>Deploy details</b>:
+</br>
+<pre>
+{}
+</pre>
+</br>
+<b>Your private RPC</b>:
+</br>
+<code>{}</code>
+</br>
+
+<b>Mnemonic</b>:
+</br>
+<code>{}</code>
+'''.format(details, rpc, data['mnemonic'])
+    # return data
+
+CHALLENGE_TEAM_STATES = {}
+# CHALLENGE_ORACLE_CACHE = {}
+
+# def store_oracle_cache(challenge_id, oracle):
+#     print('STORING', challenge_id, oracle)
+#     global CHALLENGE_ORACLE_CACHE
+#     CHALLENGE_ORACLE_CACHE[challenge_id] = oracle
+
+# def invalidate_oracle_cache(challenge_id):
+#     global CHALLENGE_ORACLE_CACHE
+#     del CHALLENGE_ORACLE_CACHE[challenge_id]
+
+# def get_oracle_cache(challenge_id):
+#     global CHALLENGE_ORACLE_CACHE
+#     return CHALLENGE_ORACLE_CACHE.get(challenge_id, None)
 
 
 def load(app):
@@ -268,6 +311,7 @@ def load(app):
     @require_verified_emails
     @app.route("/plugins/oracle_challenges/<challenge_id>", methods=["POST"])
     def request_new_challenge(challenge_id):
+        global CHALLENGE_TEAM_STATES
         if is_admin():
             challenge = OracleChallenges.query.filter(
                 Challenges.id == challenge_id
@@ -283,21 +327,84 @@ def load(app):
         team_id = get_current_user().account_id
         team_name = get_current_account_name()
         challenge_id = challenge.challenge_id
-        force_new = data["force_new"]
+
+        if challenge_id not in CHALLENGE_TEAM_STATES:
+            CHALLENGE_TEAM_STATES[challenge_id] = {}
+            # store_oracle_cache(challenge_id, challenge.oracle)
+
+        if data.get('force_new', False):
+            if team_id in CHALLENGE_TEAM_STATES[challenge_id]:
+                uuid = CHALLENGE_TEAM_STATES[challenge_id][team_id]['uuid']
+                try:
+                    r = requests.post(
+                        str(challenge.oracle) + "/{}/kill".format(uuid),
+                        json={},
+                    )
+                except requests.exceptions.ConnectionError:
+                    pass
+
+        else:
+            if team_id in CHALLENGE_TEAM_STATES[challenge_id]:
+                return format_details(request, challenge_id, CHALLENGE_TEAM_STATES[challenge_id][team_id])
+
+
 
         try:
             r = requests.post(
-                str(challenge.oracle) + "/create",
+                str(challenge.oracle) + "/new",
                 json={
-                    "team_id": team_id,
-                    "team_name": team_name,
-                    "challenge_id": challenge_id,
-                    "force_new": force_new},
+                    "domain": get_domain_from_url(request.base_url),
+                    # "team_name": team_name,
+                    # "challenge_id": challenge_id,
+                },
             )
+            CHALLENGE_TEAM_STATES[challenge_id][team_id] = r.json()
         except requests.exceptions.ConnectionError:
+            # invalidate_oracle_cache(challenge_id)
             return "ERROR: Challenge oracle is not available. Talk to an admin."
 
         if r.status_code != 200:
             return "ERROR: Challenge oracle is not available. Talk to an admin."
 
-        return r.text
+        if data.get('json', False):
+            return r.json()
+        else:
+            return format_details(request, challenge_id, r.json())
+        # return r.json().get('description', request.base_url)
+
+    @bypass_csrf_protection
+    @app.route("/challenge/<challenge_id>/<uuid>", methods=["POST"])
+    def forward_challenge_request(challenge_id, uuid):
+        # oracle = get_oracle_cache(challenge_id)
+        # print(oracle)
+        # if oracle == None:
+        if is_admin():
+            challenge = OracleChallenges.query.filter(
+                Challenges.challenge_id == challenge_id
+            ).first_or_404()
+        else:
+            challenge = OracleChallenges.query.filter(
+                OracleChallenges.challenge_id == challenge_id,
+                and_(Challenges.state != "hidden", Challenges.state != "locked"),
+            ).first_or_404()
+
+            # store_oracle_cache(challenge_id, challenge.oracle)
+        oracle = challenge.oracle
+
+        data = request.form or request.get_json()
+
+        if uuid == 'new':
+            return {"error":{"code":-32602,"message":"invalid uuid specified"},"id":data.get('id', -1),"jsonrpc":"2.0"}
+
+        try:
+            resp = requests.post(
+                str(oracle) + "/{}".format(uuid),
+                json=data
+            )
+        except requests.exceptions.ConnectionError:
+            # invalidate_oracle_cache(challenge_id)
+            return "ERROR: Challenge oracle is not available. Talk to an admin."
+
+        response = Response(resp.content, resp.status_code, resp.raw.headers.items())
+        return response
+
