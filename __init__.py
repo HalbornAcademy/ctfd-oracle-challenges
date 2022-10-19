@@ -278,7 +278,7 @@ def format_details(request, id, challenge_id, data):
     return '''
 <b>Deploy details</b>:
 </br>
-<pre>
+<pre style="color: #2983fe;">
 {}
 </pre>
 </br>
