@@ -257,7 +257,7 @@ class OracleChallenges(Challenges):
 
 
 def format_details(request, id, challenge_id, data):
-    _domain = get_domain_from_url(request.base_url),
+    _domain = get_domain_from_url(request.base_url)
     rpc = "{}/challenge/{}/{}".format(
         _domain,
         challenge_id,
@@ -269,7 +269,7 @@ def format_details(request, id, challenge_id, data):
     _gitpod_link = 'https://gitpod.io/#CHALLENGE_ID={},CHALLENGE_NAME={},HALBORN_CTF_HOST={}/https://github.com/HalbornAcademy/ctf-gitpod'.format(
         id,
         challenge_id,
-        quote(str.encode(_domain))
+        quote(_domain)
     )
 
     gitpod_button = '[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)]({})'.format(_gitpod_link)
