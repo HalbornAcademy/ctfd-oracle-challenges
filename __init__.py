@@ -329,9 +329,10 @@ def load(app):
 
         else:
             if team_id in CHALLENGE_TEAM_STATES[challenge_id]:
-                return format_details(request, challenge_id, CHALLENGE_TEAM_STATES[challenge_id][team_id])
-
-
+                if data.get('json', False):
+                    return CHALLENGE_TEAM_STATES[challenge_id][team_id]
+                else:
+                    return format_details(request, challenge_id, CHALLENGE_TEAM_STATES[challenge_id][team_id])
 
         try:
             r = requests.post(
