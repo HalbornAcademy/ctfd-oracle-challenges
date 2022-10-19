@@ -21,7 +21,7 @@ from CTFd.utils.uploads import upload_file, delete_file
 from CTFd.utils.decorators.visibility import check_challenge_visibility
 from CTFd.utils.decorators import during_ctf_time_only, require_verified_emails, authed_only
 from flask import Blueprint, abort, request, Response
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote
 
 from sqlalchemy.sql import and_
 import six
@@ -256,12 +256,23 @@ class OracleChallenges(Challenges):
         self.challenge_id = kwargs['challenge_id']
 
 
-def format_details(request, challenge_id, data):
+def format_details(request, id, challenge_id, data):
+    _domain = get_domain_from_url(request.base_url),
     rpc = "{}/challenge/{}/{}".format(
-        get_domain_from_url(request.base_url),
+        _domain,
         challenge_id,
         data['uuid']
     )
+
+    # https://gitpod.io/#CHALLENGE_ID=1,CHALLENGE_NAME=challenge0,HALBORN_CTF_HOST=http%3A%2F%2F34.207.71.34/https://github.com/HalbornAcademy/ctf-gitpod
+
+    _gitpod_link = 'https://gitpod.io/#CHALLENGE_ID={},CHALLENGE_NAME={},HALBORN_CTF_HOST={}/https://github.com/HalbornAcademy/ctf-gitpod'.format(
+        id,
+        challenge_id,
+        quote(_domain)
+    )
+
+    gitpod_button = '[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)]({})'.format(_gitpod_link)
 
     details = json.dumps(data['details'])
     return '''
@@ -279,7 +290,9 @@ def format_details(request, challenge_id, data):
 <b>Mnemonic</b>:
 </br>
 <code>{}</code>
-'''.format(details, rpc, data['mnemonic'])
+</br>
+{}
+'''.format(details, rpc, data['mnemonic'], gitpod_button)
     # return data
 
 CHALLENGE_TEAM_STATES = {}
@@ -332,7 +345,7 @@ def load(app):
                 if data.get('json', False):
                     return CHALLENGE_TEAM_STATES[challenge_id][team_id]
                 else:
-                    return format_details(request, challenge_id, CHALLENGE_TEAM_STATES[challenge_id][team_id])
+                    return format_details(request, challenge.id, challenge_id, CHALLENGE_TEAM_STATES[challenge_id][team_id])
 
         try:
             r = requests.post(
@@ -353,7 +366,7 @@ def load(app):
         if data.get('json', False):
             return r.json()
         else:
-            return format_details(request, challenge_id, r.json())
+            return format_details(request, challenge.id, challenge_id, r.json())
 
     @bypass_csrf_protection
     @app.route("/challenge/<challenge_id>/<uuid>", methods=["POST"])
