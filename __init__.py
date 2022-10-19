@@ -269,7 +269,7 @@ def format_details(request, id, challenge_id, data):
     _gitpod_link = 'https://gitpod.io/#CHALLENGE_ID={},CHALLENGE_NAME={},HALBORN_CTF_HOST={}/https://github.com/HalbornAcademy/ctf-gitpod'.format(
         id,
         challenge_id,
-        quote(_domain)
+        quote(str.encode(_domain))
     )
 
     gitpod_button = '[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)]({})'.format(_gitpod_link)
