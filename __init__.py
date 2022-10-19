@@ -21,7 +21,7 @@ from CTFd.utils.uploads import upload_file, delete_file
 from CTFd.utils.decorators.visibility import check_challenge_visibility
 from CTFd.utils.decorators import during_ctf_time_only, require_verified_emails, authed_only
 from flask import Blueprint, abort, request, Response
-from urllib.parse import urlparse, quote
+from urllib.parse import urlparse, quote_plus
 
 from sqlalchemy.sql import and_
 import six
@@ -269,7 +269,7 @@ def format_details(request, id, challenge_id, data):
     _gitpod_link = 'https://gitpod.io/#CHALLENGE_ID={},CHALLENGE_NAME={},HALBORN_CTF_HOST={}/https://github.com/HalbornAcademy/ctf-gitpod'.format(
         id,
         challenge_id,
-        quote(_domain)
+        quote_plus(_domain)
     )
 
     gitpod_button = '<p><a href="{}"><img src="https://gitpod.io/button/open-in-gitpod.svg" alt="Open in Gitpod"></a></p>'.format(_gitpod_link)
