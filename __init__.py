@@ -402,3 +402,7 @@ def load(app):
         response = Response(resp.content, resp.status_code, resp.raw.headers.items())
         return response
 
+    @bypass_csrf_protection
+    @app.route("/challenge/<challenge_id>/<uuid>", methods=["OPTIONS"])
+    def forward_challenge_request_options(challenge_id, uuid):
+        return ""
