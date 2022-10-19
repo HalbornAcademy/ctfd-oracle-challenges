@@ -286,10 +286,14 @@ def format_details(request, id, challenge_id, data):
 </br>
 <code>{}</code>
 </br>
-
+</br>
 <b>Mnemonic</b>:
 </br>
+</br>
 <code>{}</code>
+</br>
+</br>
+<b>Work environment</b>:
 </br>
 {}
 '''.format(details, rpc, data['mnemonic'], gitpod_button)
