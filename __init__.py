@@ -274,7 +274,7 @@ def format_details(request, id, challenge_id, data):
 
     gitpod_button = '<p><a href="{}"><img src="https://gitpod.io/button/open-in-gitpod.svg" alt="Open in Gitpod"></a></p>'.format(_gitpod_link)
 
-    details = json.dumps(data['details'])
+    details = json.dumps(data['details'], indent=4)
     return '''
 <b>Deploy details</b>:
 </br>
