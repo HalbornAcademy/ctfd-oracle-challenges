@@ -316,7 +316,7 @@ def load(app):
         global CHALLENGE_TEAM_STATES
         if is_admin():
             challenge = OracleChallenges.query.filter(
-                Challenges.challenge_id == challenge_id
+                OracleChallenges.challenge_id == challenge_id
             ).first_or_404()
         else:
             challenge = OracleChallenges.query.filter(
@@ -377,7 +377,7 @@ def load(app):
     def forward_challenge_request(challenge_id, uuid):
         if is_admin():
             challenge = OracleChallenges.query.filter(
-                Challenges.challenge_id == challenge_id
+                OracleChallenges.challenge_id == challenge_id
             ).first_or_404()
         else:
             challenge = OracleChallenges.query.filter(
