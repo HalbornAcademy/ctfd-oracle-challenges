@@ -316,11 +316,11 @@ def load(app):
         global CHALLENGE_TEAM_STATES
         if is_admin():
             challenge = OracleChallenges.query.filter(
-                Challenges.id == challenge_id
+                Challenges.challenge_id == challenge_id
             ).first_or_404()
         else:
             challenge = OracleChallenges.query.filter(
-                OracleChallenges.id == challenge_id,
+                OracleChallenges.challenge_id == challenge_id,
                 and_(Challenges.state != "hidden", Challenges.state != "locked"),
             ).first_or_404()
 

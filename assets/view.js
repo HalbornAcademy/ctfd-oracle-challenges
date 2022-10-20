@@ -37,7 +37,7 @@ CTFd._internal.challenge.submit = function (preview) {
 };
 
 getChallenge = function() {
-    var challenge_id = parseInt(CTFd.lib.$('#challenge-id').val())
+    var challenge_id = CTFd.lib.$('#challenge-id-oracle').val()
     var url = "/plugins/oracle_challenges/" + challenge_id;
 
     var params = {
@@ -56,7 +56,7 @@ getChallenge = function() {
 };
 
 newChallenge = function() {
-    var challenge_id = parseInt(CTFd.lib.$('#challenge-id').val());
+    var challenge_id = CTFd.lib.$('#challenge-id-oracle').val();
     var url = "/plugins/oracle_challenges/" + challenge_id;
 
     var params = {
@@ -75,31 +75,31 @@ newChallenge = function() {
 };
 
 
-fundWallet = function() {
-    var challenge_id = parseInt(CTFd.lib.$('#challenge-id').val());
-    var wallet_address = CTFd.lib.$('#wallet-address').val()
-    var url = "/plugins/oracle_challenges/" + challenge_id + "/fund";
+// fundWallet = function() {
+//     var challenge_id = parseInt(CTFd.lib.$('#challenge-id').val());
+//     var wallet_address = CTFd.lib.$('#wallet-address').val()
+//     var url = "/plugins/oracle_challenges/" + challenge_id + "/fund";
 
-    var params = {
-        'wallet': wallet_address
-    };
+//     var params = {
+//         'wallet': wallet_address
+//     };
 
-    CTFd.fetch(url, {
-        method: 'POST',
-        credentials: 'same-origin',
-        body: JSON.stringify(params)
-    }).then(function (response) {
-        return response.text();
-    }).then(function (response) {
-        const result_message = $("#result-message");
-        const result_notification = $("#result-notification");
-	result_message.text(response);
-        result_notification.removeClass();
-        result_notification.addClass("alert alert-secondary alert-dismissable text-center");
-        result_notification.slideDown();
-        $("#fundwallet-key").prop("disabled", true);
-        setTimeout(function() {
-            $(".alert").slideUp();
-          }, 3000);
-    })
-};
+//     CTFd.fetch(url, {
+//         method: 'POST',
+//         credentials: 'same-origin',
+//         body: JSON.stringify(params)
+//     }).then(function (response) {
+//         return response.text();
+//     }).then(function (response) {
+//         const result_message = $("#result-message");
+//         const result_notification = $("#result-notification");
+// 	result_message.text(response);
+//         result_notification.removeClass();
+//         result_notification.addClass("alert alert-secondary alert-dismissable text-center");
+//         result_notification.slideDown();
+//         $("#fundwallet-key").prop("disabled", true);
+//         setTimeout(function() {
+//             $(".alert").slideUp();
+//           }, 3000);
+//     })
+// };
