@@ -266,7 +266,7 @@ def format_details(request, id, challenge_id, data):
 
     # https://gitpod.io/#CHALLENGE_ID=1,CHALLENGE_NAME=challenge0,HALBORN_CTF_HOST=http%3A%2F%2F34.207.71.34/https://github.com/HalbornAcademy/ctf-gitpod
 
-    _gitpod_link = 'https://gitpod.io/#CHALLENGE_ID={},CHALLENGE_NAME={},HALBORN_CTF_HOST={}/https://github.com/HalbornAcademy/ctf-gitpod'.format(
+    _gitpod_link = 'https://gitpod.io/#CHALLENGE_NAME={},HALBORN_CTF_HOST={}/https://github.com/HalbornAcademy/ctf-gitpod'.format(
         id,
         challenge_id,
         quote_plus(_domain)
