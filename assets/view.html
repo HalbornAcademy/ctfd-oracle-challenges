@@ -20,8 +20,8 @@
       <div role="tabpanel">
         <div class="tab-content">
           <div role="tabpanel" class="tab-pane fade show active" id="challenge">
-            <h2 class='challenge-name text-center pt-3'>{{ name }}</h2>
-            <h3 class="challenge-value text-center">{{ value }}</h3>
+            <h2 class='challenge-name text-center pt-3'>{{ challenge.name }}</h2>
+            <h3 class="challenge-value text-center">{{ challenge.value }}</h3>
             <div class="challenge-tags text-center">
               {% for tag in tags %}
               <span class='badge badge-info challenge-tag'>{{ tag }}</span>
