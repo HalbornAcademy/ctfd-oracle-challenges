@@ -142,7 +142,7 @@ class OracleChallenge(BaseChallenge):
 
     @staticmethod
     def attempt(challenge, request):
-        global CHALLENGE_TEAM_STATES
+        global CHALLENGE_TEAM_RPC_UUID
         """
         This method is used to check whether a given input is right or wrong. It does not make any changes and should
         return a boolean for correctness and a string to be shown to the user. It is also in charge of parsing the
@@ -160,24 +160,25 @@ class OracleChallenge(BaseChallenge):
         team_name = get_current_account_name()
         challenge_id = challenge.challenge_id
 
-        if challenge_id in CHALLENGE_TEAM_STATES and team_id in CHALLENGE_TEAM_STATES[challenge_id]:
+        if challenge_id in CHALLENGE_TEAM_RPC_UUID and team_id in CHALLENGE_TEAM_RPC_UUID[challenge_id]:
             try:
-                uuid = CHALLENGE_TEAM_STATES[challenge_id][team_id]['uuid']
+                uuid = CHALLENGE_TEAM_RPC_UUID[challenge_id][team_id]
 
                 r = requests.post(
                     'http://' + str(challenge_id) + "/{}/solved".format(uuid), json={}
                 )
+
+                if r.status_code != 200:
+                    return False, "An error occurred when attempting to submit your flag. Talk to an admin."
+
+                resp = r.json()
+                return resp['result'], resp.get('message', 'Solved!' if resp['result'] else 'Not solved')
+
             except requests.exceptions.ConnectionError:
                 return False, "Challenge oracle is not available. Talk to an admin."
 
-            if r.status_code != 200:
-                return False, "An error occurred when attempting to submit your flag. Talk to an admin."
-
-            resp = r.json()
-            return resp['result'], resp.get('message', 'Solved!' if resp['result'] else 'Not solved')
-
         else:
-            return {"error":{"code":-32602,"message":"request new challenge"},"id":-1,"jsonrpc":"2.0"}
+            return False, "Request a new challenge first"
 
     @staticmethod
     def solve(user, team, challenge, request):
@@ -299,7 +300,7 @@ Challenge ID: <code>{}</code>
 '''.format(details, rpc, data['mnemonic'], challenge_id ,gitpod_button)
     # return data
 
-CHALLENGE_TEAM_STATES = {}
+CHALLENGE_TEAM_RPC_UUID = {}
 
 def load(app):
     app.db.create_all()
@@ -313,7 +314,7 @@ def load(app):
     @require_verified_emails
     @app.route("/plugins/oracle_challenges/<challenge_id>", methods=["POST"])
     def request_new_challenge(challenge_id):
-        global CHALLENGE_TEAM_STATES
+        global CHALLENGE_TEAM_RPC_UUID
         if is_admin():
             challenge = OracleChallenges.query.filter(
                 OracleChallenges.challenge_id == challenge_id
@@ -330,47 +331,32 @@ def load(app):
         team_name = get_current_account_name()
         challenge_id = challenge.challenge_id
 
-        if challenge_id not in CHALLENGE_TEAM_STATES:
-            CHALLENGE_TEAM_STATES[challenge_id] = {}
-
-        if data.get('force_new', False):
-            if team_id in CHALLENGE_TEAM_STATES[challenge_id]:
-                uuid = CHALLENGE_TEAM_STATES[challenge_id][team_id]['uuid']
-                try:
-                    r = requests.post(
-                        'http://' + str(challenge_id) + "/{}/kill".format(uuid),
-                        json={},
-                    )
-                except requests.exceptions.ConnectionError:
-                    pass
-
-        else:
-            if team_id in CHALLENGE_TEAM_STATES[challenge_id]:
-                if data.get('json', False):
-                    return CHALLENGE_TEAM_STATES[challenge_id][team_id]
-                else:
-                    return format_details(request, challenge.id, challenge_id, CHALLENGE_TEAM_STATES[challenge_id][team_id])
+        if challenge_id not in CHALLENGE_TEAM_RPC_UUID:
+            CHALLENGE_TEAM_RPC_UUID[challenge_id] = {}
 
         try:
             r = requests.post(
                 'http://' + str(challenge_id) + "/new",
                 json={
                     "domain": get_domain_from_url(request.base_url),
+                    'force_new': data.get('force_new', False),
+                    'player_id': team_id,
                     # "team_name": team_name,
                     # "challenge_id": challenge_id,
                 },
             )
-            CHALLENGE_TEAM_STATES[challenge_id][team_id] = r.json()
+            if r.status_code != 200:
+                return "ERROR: Challenge oracle is not available. Talk to an admin."
+
+            CHALLENGE_TEAM_RPC_UUID[challenge_id][team_id] = r.json()['uuid']
+
+            if data.get('json', False):
+                return r.json()
+            else:
+                return format_details(request, challenge.id, challenge_id, r.json())
         except requests.exceptions.ConnectionError:
             return "ERROR: Challenge oracle is not available. Talk to an admin."
 
-        if r.status_code != 200:
-            return "ERROR: Challenge oracle is not available. Talk to an admin."
-
-        if data.get('json', False):
-            return r.json()
-        else:
-            return format_details(request, challenge.id, challenge_id, r.json())
 
     @bypass_csrf_protection
     @app.route("/challenge/<challenge_id>/<uuid>", methods=["POST"])
