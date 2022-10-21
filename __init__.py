@@ -294,8 +294,9 @@ def format_details(request, id, challenge_id, data):
 </br>
 <b>Work environment</b>:
 </br>
+Challenge ID: <code>{}</code>
 {}
-'''.format(details, rpc, data['mnemonic'], gitpod_button)
+'''.format(details, rpc, data['mnemonic'], challenge_id ,gitpod_button)
     # return data
 
 CHALLENGE_TEAM_STATES = {}
