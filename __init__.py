@@ -389,6 +389,30 @@ def load(app):
         return response
 
     @bypass_csrf_protection
+    @app.route("/challenge/<challenge_id>/<uuid>/solved", methods=["POST"])
+    def checking_challenge_solved(challenge_id, uuid):
+        if is_admin():
+            challenge = OracleChallenges.query.filter(
+                OracleChallenges.challenge_id == challenge_id
+            ).first_or_404()
+        else:
+            challenge = OracleChallenges.query.filter(
+                OracleChallenges.challenge_id == challenge_id,
+                and_(Challenges.state != "hidden", Challenges.state != "locked"),
+            ).first_or_404()
+
+        r = requests.post(
+            'http://' + str(challenge_id) + "/{}/solved".format(uuid), json={}
+        )
+
+        if r.status_code != 200:
+            return False, "An error occurred when attempting to submit your flag. Talk to an admin."
+
+        resp = r.json()
+        return resp['result'], resp.get('message', 'Solved!' if resp['result'] else 'Not solved')
+
+
+    @bypass_csrf_protection
     @app.route("/challenge/<challenge_id>/<uuid>", methods=["OPTIONS"])
     def forward_challenge_request_options(challenge_id, uuid):
         return ""
