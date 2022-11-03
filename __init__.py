@@ -389,7 +389,7 @@ def load(app):
         return response
 
     @bypass_csrf_protection
-    @app.route("/challenge/<challenge_id>/<uuid>/solved", methods=["POST"])
+    @app.route("/challenge/<challenge_id>/<uuid>/solved", methods=["POST", "GET"])
     def checking_challenge_solved(challenge_id, uuid):
         if is_admin():
             challenge = OracleChallenges.query.filter(
