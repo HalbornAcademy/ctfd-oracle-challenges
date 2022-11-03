@@ -408,8 +408,7 @@ def load(app):
         if r.status_code != 200:
             return False, "An error occurred when attempting to submit your flag. Talk to an admin."
 
-        resp = r.json()
-        return resp['result'], resp.get('message', 'Solved!' if resp['result'] else 'Not solved')
+        return r.json()
 
 
     @bypass_csrf_protection
