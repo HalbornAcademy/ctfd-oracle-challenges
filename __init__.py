@@ -23,6 +23,8 @@ from CTFd.utils.decorators import during_ctf_time_only, require_verified_emails,
 from flask import Blueprint, abort, request, Response
 from urllib.parse import urlparse, quote_plus
 
+from CTFd.models import ChallengeFiles as ChallengeFilesModel
+
 from sqlalchemy.sql import and_
 import six
 import json
@@ -309,7 +311,7 @@ def load(app):
         app, base_path="/plugins/oracle_challenges/assets/"
     )
 
-    @check_challenge_visibility
+    # @check_challenge_visibility
     @during_ctf_time_only
     @require_verified_emails
     @app.route("/plugins/oracle_challenges/<challenge_id>", methods=["POST"])
@@ -357,6 +359,30 @@ def load(app):
         except requests.exceptions.ConnectionError:
             return "ERROR: Challenge oracle is not available. Talk to an admin."
 
+    @during_ctf_time_only
+    @require_verified_emails
+    @app.route("/plugins/oracle_challenges/<challenge_id>/files", methods=["GET"])
+    def request_new_challenge_files(challenge_id):
+        global CHALLENGE_TEAM_RPC_UUID
+        if is_admin():
+            challenge = OracleChallenges.query.filter(
+                OracleChallenges.challenge_id == challenge_id
+            ).first_or_404()
+        else:
+            challenge = OracleChallenges.query.filter(
+                OracleChallenges.challenge_id == challenge_id,
+                and_(Challenges.state != "hidden", Challenges.state != "locked"),
+            ).first_or_404()
+
+        response = []
+
+        challenge_files = ChallengeFilesModel.query.filter_by(
+            challenge_id=challenge.id
+        ).all()
+
+        for f in challenge_files:
+            response.append({"id": f.id, "type": f.type, "location": f.location})
+        return {"success": True, "data": response}
 
     @bypass_csrf_protection
     @app.route("/challenge/<challenge_id>/<uuid>", methods=["POST"])
