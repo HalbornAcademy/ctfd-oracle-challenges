@@ -323,8 +323,8 @@ def load(app):
             ).first_or_404()
         else:
             challenge = OracleChallenges.query.filter(
-                OracleChallenges.challenge_id == challenge_id,
-                and_(Challenges.state != "hidden", Challenges.state != "locked"),
+                OracleChallenges.challenge_id == challenge_id
+                # and_(Challenges.state != "hidden", Challenges.state != "locked"),
             ).first_or_404()
 
         data = request.form or request.get_json()
@@ -370,8 +370,8 @@ def load(app):
             ).first_or_404()
         else:
             challenge = OracleChallenges.query.filter(
-                OracleChallenges.challenge_id == challenge_id,
-                and_(Challenges.state != "hidden", Challenges.state != "locked"),
+                OracleChallenges.challenge_id == challenge_id
+                # and_(Challenges.state != "hidden", Challenges.state != "locked"),
             ).first_or_404()
 
         response = []
