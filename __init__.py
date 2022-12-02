@@ -317,15 +317,9 @@ def load(app):
     @app.route("/plugins/oracle_challenges/<challenge_id>", methods=["POST"])
     def request_new_challenge(challenge_id):
         global CHALLENGE_TEAM_RPC_UUID
-        if is_admin():
-            challenge = OracleChallenges.query.filter(
-                OracleChallenges.challenge_id == challenge_id
-            ).first_or_404()
-        else:
-            challenge = OracleChallenges.query.filter(
-                OracleChallenges.challenge_id == challenge_id
-                # and_(Challenges.state != "hidden", Challenges.state != "locked"),
-            ).first_or_404()
+        challenge = OracleChallenges.query.filter(
+            OracleChallenges.challenge_id == challenge_id
+        ).first_or_404()
 
         data = request.form or request.get_json()
 
@@ -364,15 +358,9 @@ def load(app):
     @app.route("/plugins/oracle_challenges/<challenge_id>/files", methods=["GET"])
     def request_new_challenge_files(challenge_id):
         global CHALLENGE_TEAM_RPC_UUID
-        if is_admin():
-            challenge = OracleChallenges.query.filter(
-                OracleChallenges.challenge_id == challenge_id
-            ).first_or_404()
-        else:
-            challenge = OracleChallenges.query.filter(
-                OracleChallenges.challenge_id == challenge_id
-                # and_(Challenges.state != "hidden", Challenges.state != "locked"),
-            ).first_or_404()
+        challenge = OracleChallenges.query.filter(
+            OracleChallenges.challenge_id == challenge_id
+        ).first_or_404()
 
         response = []
 
@@ -387,16 +375,9 @@ def load(app):
     @bypass_csrf_protection
     @app.route("/challenge/<challenge_id>/<uuid>", methods=["POST"])
     def forward_challenge_request(challenge_id, uuid):
-        if is_admin():
-            challenge = OracleChallenges.query.filter(
-                OracleChallenges.challenge_id == challenge_id
-            ).first_or_404()
-        else:
-            challenge = OracleChallenges.query.filter(
-                OracleChallenges.challenge_id == challenge_id,
-                and_(Challenges.state != "hidden", Challenges.state != "locked"),
-            ).first_or_404()
-
+        challenge = OracleChallenges.query.filter(
+            OracleChallenges.challenge_id == challenge_id
+        ).first_or_404()
 
         data = request.form or request.get_json()
 
@@ -417,15 +398,9 @@ def load(app):
     @bypass_csrf_protection
     @app.route("/challenge/<challenge_id>/<uuid>/solved", methods=["POST", "GET"])
     def checking_challenge_solved(challenge_id, uuid):
-        if is_admin():
-            challenge = OracleChallenges.query.filter(
-                OracleChallenges.challenge_id == challenge_id
-            ).first_or_404()
-        else:
-            challenge = OracleChallenges.query.filter(
-                OracleChallenges.challenge_id == challenge_id,
-                and_(Challenges.state != "hidden", Challenges.state != "locked"),
-            ).first_or_404()
+        challenge = OracleChallenges.query.filter(
+            OracleChallenges.challenge_id == challenge_id
+        ).first_or_404()
 
         r = requests.post(
             'http://' + str(challenge_id) + "/{}/solved".format(uuid), json={}
