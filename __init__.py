@@ -161,9 +161,9 @@ class OracleChallenge(BaseChallenge):
         team_name = get_current_account_name()
         challenge_id = challenge.challenge_id
 
-        previous_uuid = ChallengeTeam_UUID.query.filter(
-            ChallengeTeam_UUID.challenge_id == challenge_id,
-            ChallengeTeam_UUID.player == team_id
+        previous_uuid = ChallengeUser_UUID.query.filter(
+            ChallengeUser_UUID.challenge_id == challenge_id,
+            ChallengeUser_UUID.user == team_id
         ).first()
 
         if previous_uuid is not None:
@@ -232,14 +232,14 @@ class OracleChallenge(BaseChallenge):
         db.session.add(wrong)
         db.session.commit()
 
-class ChallengeTeam_UUID(db.Model):
+class ChallengeUser_UUID(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    player = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.Column(db.Integer, db.ForeignKey('users.id'))
     challenge_id = db.Column(db.String(255))
     uuid = db.Column(db.String(255))
 
-    def __init__(self, player, challenge_id, uuid):
-        self.player = player
+    def __init__(self, user_id, challenge_id, uuid):
+        self.user = user_id
         self.challenge_id = challenge_id
         self.uuid = uuid
 
@@ -339,9 +339,9 @@ def load(app):
         team_name = get_current_account_name()
         challenge_id = challenge.challenge_id
 
-        previous_uuid = ChallengeTeam_UUID.query.filter(
-            ChallengeTeam_UUID.challenge_id == challenge_id,
-            ChallengeTeam_UUID.player == team_id
+        previous_uuid = ChallengeUser_UUID.query.filter(
+            ChallengeUser_UUID.challenge_id == challenge_id,
+            ChallengeUser_UUID.user == team_id
         ).first()
 
         try:
@@ -361,7 +361,7 @@ def load(app):
             uuid = r.json()['uuid']
 
             if previous_uuid is None:
-                c = ChallengeTeam_UUID(team_id, challenge_id, uuid)
+                c = ChallengeUser_UUID(team_id, challenge_id, uuid)
                 db.session.add(c)
                 db.session.commit()
             else:
