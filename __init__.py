@@ -144,7 +144,6 @@ class OracleChallenge(BaseChallenge):
 
     @staticmethod
     def attempt(challenge, request):
-        global CHALLENGE_TEAM_RPC_UUID
         """
         This method is used to check whether a given input is right or wrong. It does not make any changes and should
         return a boolean for correctness and a string to be shown to the user. It is also in charge of parsing the
@@ -158,13 +157,18 @@ class OracleChallenge(BaseChallenge):
         # submission = data["submission"].strip()
         # instance_id = submission
         # submission = data["submission"].strip()
-        team_id = get_current_user().account_id
+        team_id = get_current_user().id
         team_name = get_current_account_name()
         challenge_id = challenge.challenge_id
 
-        if challenge_id in CHALLENGE_TEAM_RPC_UUID and team_id in CHALLENGE_TEAM_RPC_UUID[challenge_id]:
+        previous_uuid = ChallengeTeam_UUID.query.filter(
+            ChallengeTeam_UUID.challenge_id == challenge_id,
+            ChallengeTeam_UUID.team == team_id
+        ).first()
+
+        if previous_uuid is not None:
             try:
-                uuid = CHALLENGE_TEAM_RPC_UUID[challenge_id][team_id]
+                uuid = previous_uuid.uuid 
 
                 r = requests.post(
                     'http://' + str(challenge_id) + "/{}/solved".format(uuid), json={}
@@ -227,6 +231,17 @@ class OracleChallenge(BaseChallenge):
         )
         db.session.add(wrong)
         db.session.commit()
+
+class ChallengeTeam_UUID(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    team = db.Column(db.Integer, db.ForeignKey('teams.id'))
+    challenge_id = db.Column(db.String(255))
+    uuid = db.Column(db.String(255))
+
+    def __init__(self, team, challenge_id, uuid):
+        self.team = team
+        self.challenge_id = challenge_id
+        self.uuid = uuid
 
 
 def get_chal_class(class_id):
@@ -302,8 +317,6 @@ Challenge ID: <code>{}</code>
 '''.format(details, rpc, data['mnemonic'], challenge_id ,gitpod_button)
     # return data
 
-CHALLENGE_TEAM_RPC_UUID = {}
-
 def load(app):
     app.db.create_all()
     CHALLENGE_CLASSES["oracle"] = OracleChallenge
@@ -316,19 +329,20 @@ def load(app):
     @require_verified_emails
     @app.route("/plugins/oracle_challenges/<challenge_id>", methods=["POST"])
     def request_new_challenge(challenge_id):
-        global CHALLENGE_TEAM_RPC_UUID
         challenge = OracleChallenges.query.filter(
             OracleChallenges.challenge_id == challenge_id
         ).first_or_404()
 
         data = request.form or request.get_json()
 
-        team_id = get_current_user().account_id
+        team_id = get_current_user().id
         team_name = get_current_account_name()
         challenge_id = challenge.challenge_id
 
-        if challenge_id not in CHALLENGE_TEAM_RPC_UUID:
-            CHALLENGE_TEAM_RPC_UUID[challenge_id] = {}
+        previous_uuid = ChallengeTeam_UUID.query.filter(
+            ChallengeTeam_UUID.challenge_id == challenge_id,
+            ChallengeTeam_UUID.team == team_id
+        ).first()
 
         try:
             r = requests.post(
@@ -344,7 +358,16 @@ def load(app):
             if r.status_code != 200:
                 return "ERROR: Challenge oracle is not available. Talk to an admin."
 
-            CHALLENGE_TEAM_RPC_UUID[challenge_id][team_id] = r.json()['uuid']
+            uuid = r.json()['uuid']
+
+            if previous_uuid is None:
+                c = ChallengeTeam_UUID(team_id, challenge_id, uuid)
+                db.session.add(c)
+                db.session.commit()
+            else:
+                previous_uuid.uuid = uuid
+                db.session.add(previous_uuid)
+                db.session.commit()
 
             if data.get('json', False):
                 return r.json()
@@ -357,7 +380,6 @@ def load(app):
     @require_verified_emails
     @app.route("/plugins/oracle_challenges/<challenge_id>/files", methods=["GET"])
     def request_new_challenge_files(challenge_id):
-        global CHALLENGE_TEAM_RPC_UUID
         challenge = OracleChallenges.query.filter(
             OracleChallenges.challenge_id == challenge_id
         ).first_or_404()
