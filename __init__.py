@@ -163,7 +163,7 @@ class OracleChallenge(BaseChallenge):
 
         previous_uuid = ChallengeTeam_UUID.query.filter(
             ChallengeTeam_UUID.challenge_id == challenge_id,
-            ChallengeTeam_UUID.team == team_id
+            ChallengeTeam_UUID.player == team_id
         ).first()
 
         if previous_uuid is not None:
@@ -234,12 +234,12 @@ class OracleChallenge(BaseChallenge):
 
 class ChallengeTeam_UUID(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    team = db.Column(db.Integer, db.ForeignKey('teams.id'))
+    player = db.Column(db.Integer, db.ForeignKey('users.id'))
     challenge_id = db.Column(db.String(255))
     uuid = db.Column(db.String(255))
 
-    def __init__(self, team, challenge_id, uuid):
-        self.team = team
+    def __init__(self, player, challenge_id, uuid):
+        self.player = player
         self.challenge_id = challenge_id
         self.uuid = uuid
 
@@ -341,7 +341,7 @@ def load(app):
 
         previous_uuid = ChallengeTeam_UUID.query.filter(
             ChallengeTeam_UUID.challenge_id == challenge_id,
-            ChallengeTeam_UUID.team == team_id
+            ChallengeTeam_UUID.player == team_id
         ).first()
 
         try:
